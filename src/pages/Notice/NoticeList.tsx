@@ -16,7 +16,7 @@ const NoticeList = () => {
 
     const { data: notices = [], isLoading } = useQuery({
         queryKey: ['notices'],
-        queryFn: noticeService.getNotices,
+        queryFn: () => noticeService.getNotices(),
     });
 
     // Delete Notice Mutation

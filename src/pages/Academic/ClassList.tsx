@@ -19,7 +19,7 @@ const ClassList = () => {
     // Fetch Classes
     const { data: classes = [], isLoading } = useQuery({
         queryKey: ['classes'],
-        queryFn: academicService.getClasses,
+        queryFn: () => academicService.getClasses(),
     });
 
     // Create Class Mutation

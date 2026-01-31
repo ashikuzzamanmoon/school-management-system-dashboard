@@ -9,7 +9,7 @@ const AdminList = () => {
 
     const { data: admins = [], isLoading, isError } = useQuery({
         queryKey: ['admins'],
-        queryFn: userService.getAllAdmins,
+        queryFn: () => userService.getAllAdmins(),
     });
 
     const deleteAdminMutation = useMutation({

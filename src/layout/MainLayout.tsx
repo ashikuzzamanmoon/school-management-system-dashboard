@@ -104,9 +104,6 @@ const MainLayout = () => {
 
                             {(isAcademicOpen || !isSidebarOpen) && (
                                 <ul className={`${isSidebarOpen ? 'bg-slate-950 pl-4' : ''} ${!isSidebarOpen && 'hidden group-hover:block absolute left-20 bg-slate-900 p-2 rounded w-48 shadow-lg'}`}>
-                                    {/* Only show subitems if sidebar is open or if we implementing a hover drawer for collapsed sidebar (simplified here to just show if open) -> Actually for collapsed state, handling submenus is tricky without hover. Let's keep it simple: if collapsed, clicking main icon expands sidebar? Or just hide submenus. 
-                             Better approach for collapsed sidebar: Just hide submenus and user has to expand sidebar to access them, OR make the parent link go to a main academic page.
-                             For now, let's assume sidebar open for submenus access. */}
                                     {isSidebarOpen && (
                                         <>
                                             <li>

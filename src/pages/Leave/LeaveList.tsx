@@ -13,7 +13,7 @@ const LeaveList = () => {
 
     const { data: leaves = [], isLoading } = useQuery({
         queryKey: ['leaves'],
-        queryFn: leaveService.getLeaves,
+        queryFn: () => leaveService.getLeaves(),
     });
 
     const updateStatusMutation = useMutation({

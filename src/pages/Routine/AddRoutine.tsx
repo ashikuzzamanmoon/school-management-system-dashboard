@@ -17,13 +17,13 @@ const AddRoutine = () => {
 
     const selectedClass = watch('class');
 
-    const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: academicService.getClasses });
+    const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: () => academicService.getClasses() });
     const { data: sections = [], isLoading: isLoadingSections } = useQuery({
         queryKey: ['sections', selectedClass],
         queryFn: () => academicService.getSections({ class: selectedClass }),
         enabled: !!selectedClass
     });
-    const { data: subjects = [] } = useQuery({ queryKey: ['subjects'], queryFn: academicService.getSubjects });
+    const { data: subjects = [] } = useQuery({ queryKey: ['subjects'], queryFn: () => academicService.getSubjects() });
 
     const createRoutineMutation = useMutation({
         mutationFn: routineService.createRoutine,

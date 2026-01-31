@@ -19,7 +19,7 @@ const SectionList = () => {
     // Fetch Classes
     const { data: classes = [] } = useQuery({
         queryKey: ['classes'],
-        queryFn: academicService.getClasses,
+        queryFn: () => academicService.getClasses(),
     });
 
     // Fetch Sections
@@ -85,7 +85,6 @@ const SectionList = () => {
         setIsEditMode(true);
         setCurrentSection(item);
         setValue('name', item.name);
-        // Ensure item.class is an object and has _id, or handle if it's just an ID string (though populate should make it an object)
         setValue('class', (item.class as any)?._id || item.class);
         setIsModalOpen(true);
     };

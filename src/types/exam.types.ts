@@ -27,7 +27,9 @@ export interface ICreateExamPayload {
 export interface IResult {
     _id: string;
     student: IStudent; // Populated usually, or ID
-    examName: string;
+    exam: IExam | string;
+    class: IClass | string;
+    section: ISection | string;
     subject: ISubject | string;
     marks: number;
     grade?: string;

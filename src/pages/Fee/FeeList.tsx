@@ -15,8 +15,8 @@ const FeeList = () => {
     const [currentFee, setCurrentFee] = useState<IFee | null>(null);
 
     const queryClient = useQueryClient();
-    const { data: fees = [], isLoading } = useQuery({ queryKey: ['fees'], queryFn: feeService.getFees });
-    const { data: students = [] } = useQuery({ queryKey: ['students'], queryFn: userService.getAllStudents });
+    const { data: fees = [], isLoading } = useQuery({ queryKey: ['fees'], queryFn: () => feeService.getFees() });
+    const { data: students = [] } = useQuery({ queryKey: ['students'], queryFn: () => userService.getAllStudents() });
 
     // Update Mutation
     const updateMutation = useMutation({

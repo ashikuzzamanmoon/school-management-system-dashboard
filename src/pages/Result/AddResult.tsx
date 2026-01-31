@@ -13,21 +13,12 @@ const AddResult = () => {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    // Watch values to filter students?
-    // Using RHF watch is good, but we need data for dropdowns first.
-
     // Master Data
-    // Master Data
-    const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: academicService.getClasses });
-    const { data: subjects = [] } = useQuery({ queryKey: ['subjects'], queryFn: academicService.getSubjects });
-    // We ideally should fetch exams.
+    const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: () => academicService.getClasses() });
+    const { data: subjects = [] } = useQuery({ queryKey: ['subjects'], queryFn: () => academicService.getSubjects() });
     const { data: exams = [] } = useQuery({ queryKey: ['exams'], queryFn: () => examService.getExams() });
 
-    // We need filtered students based on Class/Section. The current getAllStudents returns ALL. 
-    // Ideally backend should support filtering students by class/section. 
-    // The current userService.getAllStudents implementation in frontend fetches ALL.
-    // We will do Client Side filtering for now to MVP.
-    const { data: allStudents = [] } = useQuery({ queryKey: ['students'], queryFn: userService.getAllStudents });
+    const { data: allStudents = [] } = useQuery({ queryKey: ['students'], queryFn: () => userService.getAllStudents() });
 
     const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<CreateResultFormData>({
         resolver: zodResolver(createResultSchema),

@@ -25,8 +25,12 @@ const ResultList = () => {
     const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<{ marks: number; grade: string }>();
 
     // Fetch Master Data
-    const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: academicService.getClasses });
-    const { data: sections = [] } = useQuery({ queryKey: ['sections'], queryFn: academicService.getSections });
+    const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: () => academicService.getClasses() });
+    const { data: sections = [], isLoading: isLoadingSections } = useQuery({
+        queryKey: ['sections', selectedClass],
+        queryFn: () => academicService.getSections({ class: selectedClass }),
+        enabled: !!selectedClass
+    });
     const { data: exams = [] } = useQuery({ queryKey: ['exams'], queryFn: () => examService.getExams() });
 
     // Fetch Results - Enabled only when filterParams is set
@@ -112,11 +116,15 @@ const ResultList = () => {
         },
         {
             header: 'Class',
-            accessor: (item: IResult) => (item.student as any)?.class?.name || 'N/A'
+            accessor: (item: IResult) => (item.student && (item.student as any).class ? (item.student as any).class.name : 'N/A')
+        },
+        {
+            header: 'Section',
+            accessor: (item: IResult) => (item.section && typeof item.section === 'object' ? item.section.name : 'N/A')
         },
         {
             header: 'Subject',
-            accessor: (item: IResult) => (typeof item.subject === 'object' ? item.subject.name : 'N/A')
+            accessor: (item: IResult) => (item.subject && typeof item.subject === 'object' ? item.subject.name : 'N/A')
         },
         {
             header: 'Marks',
@@ -128,7 +136,7 @@ const ResultList = () => {
         },
         {
             header: 'Exam',
-            accessor: 'examName' as keyof IResult
+            accessor: (item: IResult) => (item.exam && typeof item.exam === 'object' ? item.exam.examName : 'N/A')
         },
         {
             header: 'Actions',
@@ -157,7 +165,10 @@ const ResultList = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
                     <select
                         value={selectedClass}
-                        onChange={(e) => setSelectedClass(e.target.value)}
+                        onChange={(e) => {
+                            setSelectedClass(e.target.value);
+                            setSelectedSection('');
+                        }}
                         className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
                     >
                         <option value="">All Classes</option>
@@ -170,8 +181,9 @@ const ResultList = () => {
                         value={selectedSection}
                         onChange={(e) => setSelectedSection(e.target.value)}
                         className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
+                        disabled={!selectedClass}
                     >
-                        <option value="">All Sections</option>
+                        <option value="">{isLoadingSections ? 'Loading...' : !selectedClass ? 'Select Class First' : 'All Sections'}</option>
                         {sections.map((s: any) => <option key={s._id} value={s._id}>{s.name}</option>)}
                     </select>
                 </div>
@@ -219,8 +231,8 @@ const ResultList = () => {
                 <form onSubmit={handleSubmit(onEditSubmit)} className="space-y-4">
                     <div className="bg-gray-50 p-3 rounded-md mb-4 text-sm">
                         <p><span className="font-bold">Student:</span> {currentResult?.student?.name} ({currentResult?.student?.roll})</p>
-                        <p><span className="font-bold">Exam:</span> {currentResult?.examName}</p>
-                        <p><span className="font-bold">Subject:</span> {typeof currentResult?.subject === 'object' ? currentResult.subject.name : 'N/A'}</p>
+                        <p><span className="font-bold">Exam:</span> {currentResult?.exam && typeof currentResult.exam === 'object' ? currentResult.exam.examName : 'N/A'}</p>
+                        <p><span className="font-bold">Subject:</span> {currentResult?.subject && typeof currentResult.subject === 'object' ? currentResult.subject.name : 'N/A'}</p>
                     </div>
 
                     <div>

@@ -19,7 +19,7 @@ const SubjectList = () => {
     // Fetch Subjects
     const { data: subjects = [], isLoading } = useQuery({
         queryKey: ['subjects'],
-        queryFn: academicService.getSubjects,
+        queryFn: () => academicService.getSubjects(),
     });
 
     // Create Subject Mutation

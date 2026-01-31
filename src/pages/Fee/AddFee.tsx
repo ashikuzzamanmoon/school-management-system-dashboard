@@ -22,7 +22,7 @@ const AddFee = () => {
     const statusObj = watch('status');
 
     // Fetch Classes & Sections
-    const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: academicService.getClasses });
+    const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: () => academicService.getClasses() });
 
     const selectedClass = watch('class');
     const selectedSection = watch('section');

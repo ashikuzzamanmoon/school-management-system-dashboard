@@ -21,13 +21,13 @@ const StudyGuideList = () => {
 
     const queryClient = useQueryClient();
 
-    const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: academicService.getClasses });
-    const { data: filterSections = [] } = useQuery({
+    const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: () => academicService.getClasses() });
+    const { data: filterSections = [], isLoading: isLoadingSections } = useQuery({
         queryKey: ['filterSections', selectedClass],
         queryFn: () => academicService.getSections({ class: selectedClass }),
         enabled: !!selectedClass
     });
-    const { data: subjects = [] } = useQuery({ queryKey: ['subjects'], queryFn: academicService.getSubjects });
+    const { data: subjects = [] } = useQuery({ queryKey: ['subjects'], queryFn: () => academicService.getSubjects() });
 
     const { data: guides = [], isLoading } = useQuery({
         queryKey: ['studyGuides', filterParams],
@@ -156,7 +156,10 @@ const StudyGuideList = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
                     <select
                         value={selectedClass}
-                        onChange={(e) => setSelectedClass(e.target.value)}
+                        onChange={(e) => {
+                            setSelectedClass(e.target.value);
+                            setSelectedSection('');
+                        }}
                         className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
                     >
                         <option value="">All Classes</option>
@@ -169,8 +172,9 @@ const StudyGuideList = () => {
                         value={selectedSection}
                         onChange={(e) => setSelectedSection(e.target.value)}
                         className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
+                        disabled={!selectedClass}
                     >
-                        <option value="">All Sections</option>
+                        <option value="">{isLoadingSections ? 'Loading...' : !selectedClass ? 'Select Class First' : 'All Sections'}</option>
                         {filterSections.map((s: any) => <option key={s._id} value={s._id}>{s.name}</option>)}
                     </select>
                 </div>

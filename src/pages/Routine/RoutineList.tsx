@@ -14,7 +14,7 @@ const RoutineList = () => {
     const [filters, setFilters] = useState<{ class: string; section: string } | null>(null);
 
     // Fetch master data
-    const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: academicService.getClasses });
+    const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: () => academicService.getClasses() });
     const { data: sections = [], isLoading: isLoadingSections } = useQuery({
         queryKey: ['sections', selectedClass],
         queryFn: () => academicService.getSections({ class: selectedClass }),

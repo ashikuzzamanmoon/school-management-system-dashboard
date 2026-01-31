@@ -9,9 +9,9 @@ import { leaveService } from '../../services/leave.service';
 const DashboardHome = () => {
     // Parallel fetching for stats
     const { data: students = [] } = useQuery({ queryKey: ['students'], queryFn: () => userService.getAllStudents() });
-    const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: academicService.getClasses });
-    const { data: notices = [] } = useQuery({ queryKey: ['notices'], queryFn: noticeService.getNotices });
-    const { data: leaves = [] } = useQuery({ queryKey: ['leaves'], queryFn: leaveService.getLeaves });
+    const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: () => academicService.getClasses() });
+    const { data: notices = [] } = useQuery({ queryKey: ['notices'], queryFn: () => noticeService.getNotices() });
+    const { data: leaves = [] } = useQuery({ queryKey: ['leaves'], queryFn: () => leaveService.getLeaves() });
 
     const pendingLeaves = Array.isArray(leaves) ? leaves.filter((l: any) => l.status === 'Pending').length : 0;
 

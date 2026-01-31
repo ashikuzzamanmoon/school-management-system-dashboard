@@ -8,10 +8,6 @@ import { createAdminSchema, type CreateAdminResult } from '../../schemas/admin.s
 import { Save, UserCog, Mail, Briefcase, Phone, MapPin, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-// Reusing CreateAdmin schema but might need adjustments for optional fields in update
-// For now, assume validating full payload is okay, or we can use .partial() if Zod schema was exported differently.
-// Since schema includes nested 'admin' object, we need to handle that.
-
 const UpdateAdmin = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -24,11 +20,9 @@ const UpdateAdmin = () => {
         setValue,
         formState: { errors },
     } = useForm<CreateAdminResult>({
-        resolver: zodResolver(createAdminSchema), // Using create schema for validation might be strict if password is required. 
-        // Need to check schema: password is optional in schema? Yes "z.string().optional()"
+        resolver: zodResolver(createAdminSchema),
     });
 
-    // Fetch existing admin data
     const { data: adminData, isError } = useQuery({
         queryKey: ['admin', id],
         queryFn: () => userService.getSingleAdmin(id!),
@@ -37,13 +31,6 @@ const UpdateAdmin = () => {
 
     useEffect(() => {
         if (adminData) {
-            // Pre-fill form
-            // adminData structure: { id, email, role, ... and populated user? No. Service endpoint returns Admin document which has 'user' populated.
-            // Backend getSingleAdmin returns AdminModel document. 
-            // AdminModel has: name, email, contactNo, designation, etc. directly.
-            // Wait, schema expects { admin: { ... }, password: ... }
-            // So we need to map adminData to form structure.
-
             setValue('admin.name', adminData.name);
             setValue('admin.email', adminData.email);
             setValue('admin.contactNo', adminData.contactNo);
@@ -63,14 +50,7 @@ const UpdateAdmin = () => {
     }, [adminData, isError, setValue]);
 
     const updateAdminMutation = useMutation({
-        mutationFn: (data: CreateAdminResult) => userService.updateAdmin(id!, data.admin), // Send only admin payload part? 
-        // Backend updateAdminIntoDB takes payload. If controller does req.body.admin, then we send { admin: ... } ?
-        // Controller: const { admin } = req.body;
-        // So we should send { admin: data.admin } structure if using same controller logic as create?
-        // Wait, controller updateAdmin: const { admin } = req.body. 
-        // So yes, we should pass { admin: data.admin } to the API call.
-        // userService.updateAdmin implementation: axios.patch(url, data). 
-        // So we pass full data object structure { admin: ... }
+        mutationFn: (data: CreateAdminResult) => userService.updateAdmin(id!, data),
         onSuccess: () => {
             toast.success('Admin updated successfully');
             navigate('/admin-list');
@@ -81,9 +61,7 @@ const UpdateAdmin = () => {
     });
 
     const onSubmit = (data: CreateAdminResult) => {
-        // Prepare payload matching backend requirement
-        // Controller expects req.body.admin
-        updateAdminMutation.mutate({ admin: data.admin } as any);
+        updateAdminMutation.mutate(data);
     };
 
     if (isLoadingData && !adminData) {
