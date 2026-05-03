@@ -7,12 +7,16 @@ export const leaveService = {
         const response = await api.get<IResponse<ILeaveApplication[]>>('/leaves');
         return response.data.data;
     },
+    getMyLeaves: async () => {
+        const response = await api.get<IResponse<ILeaveApplication[]>>('/leaves/my-applications');
+        return response.data.data;
+    },
     updateStatus: async (id: string, data: IUpdateLeaveStatusPayload) => {
         const response = await api.patch<IResponse<ILeaveApplication>>(`/leaves/${id}/status`, data);
         return response.data.data;
     },
     createLeave: async (data: ICreateLeavePayload) => {
-        const response = await api.post<IResponse<ILeaveApplication>>('/leaves/create', data);
+        const response = await api.post<IResponse<ILeaveApplication>>('/leaves/create-application', data);
         return response.data.data;
     },
     deleteLeave: async (id: string) => {

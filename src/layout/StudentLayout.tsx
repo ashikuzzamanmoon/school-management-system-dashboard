@@ -15,7 +15,7 @@ import {
     ClipboardList
 } from 'lucide-react';
 
-const StudentLayout = () => {
+const StudentLayout = ({ children }: { children?: React.ReactNode }) => {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -53,7 +53,7 @@ const StudentLayout = () => {
         { path: '/student/study-guides', label: 'Daily Study Guide', icon: <BookOpen size={20} /> },
         { path: '/student/fees', label: 'Payments', icon: <CreditCard size={20} /> },
         { path: '/student/leaves', label: 'Leave Request', icon: <ClipboardList size={20} /> },
-        { path: '/profile', label: 'My Profile', icon: <UserIcon size={20} /> },
+        { path: '/student/profile', label: 'My Profile', icon: <UserIcon size={20} /> },
     ];
 
     return (
@@ -128,7 +128,7 @@ const StudentLayout = () => {
                 </header>
 
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-                    <Outlet />
+                    {children || <Outlet />}
                 </main>
             </div>
         </div>

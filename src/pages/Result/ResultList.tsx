@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { academicService } from '../../services/academic.service';
 import { examService, resultService } from '../../services/exam.service';
+import { userService } from '../../services/user.service';
 import Table from '../../components/common/Table';
 import Modal from '../../components/common/Modal';
 import type { IResult } from '../../types/exam.types';
@@ -24,6 +25,10 @@ const ResultList = () => {
     const queryClient = useQueryClient();
     const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<{ marks: number; grade: string }>();
 
+    const { data: userData } = useQuery({ queryKey: ['me'], queryFn: userService.getMe });
+    const userRole = (userData?.user?.role || userData?.role || '').toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin';
+
     // Fetch Master Data
     const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: () => academicService.getClasses() });
     const { data: sections = [], isLoading: isLoadingSections } = useQuery({
@@ -35,9 +40,9 @@ const ResultList = () => {
 
     // Fetch Results
     const { data: results = [], isLoading, isFetching } = useQuery({
-        queryKey: ['results', filterParams],
-        queryFn: () => resultService.getResults(filterParams || {}),
-        enabled: true,
+        queryKey: ['results', filterParams, userRole],
+        queryFn: () => isAdmin ? resultService.getResults(filterParams || {}) : resultService.getMyResults(),
+        enabled: !!userRole,
     });
 
     // Update Result Mutation
@@ -145,7 +150,8 @@ const ResultList = () => {
             header: 'Exam',
             accessor: (item: IResult) => (item.exam && typeof item.exam === 'object' ? item.exam.examName : 'N/A')
         },
-        {
+        // Only show actions for admins
+        ...(isAdmin ? [{
             header: 'Actions',
             accessor: (item: IResult) => (
                 <div className="flex gap-2">
@@ -157,7 +163,7 @@ const ResultList = () => {
                     </button>
                 </div>
             )
-        }
+        }] : [])
     ];
 
     return (
@@ -166,55 +172,57 @@ const ResultList = () => {
                 <h1 className="text-2xl font-bold text-gray-800">Exam Results</h1>
             </div>
 
-            {/* Filter Section */}
-            <div className="bg-white p-4 rounded-lg shadow mb-6 flex flex-wrap gap-4 items-end">
-                <div className="flex-1 min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
-                    <select
-                        value={selectedClass}
-                        onChange={(e) => {
-                            setSelectedClass(e.target.value);
-                            setSelectedSection('');
-                        }}
-                        className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
+            {/* Filter Section - Only for Admins */}
+            {isAdmin && (
+                <div className="bg-white p-4 rounded-lg shadow mb-6 flex flex-wrap gap-4 items-end">
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
+                        <select
+                            value={selectedClass}
+                            onChange={(e) => {
+                                setSelectedClass(e.target.value);
+                                setSelectedSection('');
+                            }}
+                            className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
+                        >
+                            <option value="">All Classes</option>
+                            {classes.map((c: { _id: string; name: string }) => <option key={c._id} value={c._id}>{c.name}</option>)}
+                        </select>
+                    </div>
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                        <select
+                            value={selectedSection}
+                            onChange={(e) => setSelectedSection(e.target.value)}
+                            className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
+                            disabled={!selectedClass}
+                        >
+                            <option value="">{isLoadingSections ? 'Loading...' : !selectedClass ? 'Select Class First' : 'All Sections'}</option>
+                            {sections.map((s: { _id: string; name: string }) => <option key={s._id} value={s._id}>{s.name}</option>)}
+                        </select>
+                    </div>
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Exam</label>
+                        <select
+                            value={selectedExam}
+                            onChange={(e) => setSelectedExam(e.target.value)}
+                            className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
+                        >
+                            <option value="">All Exams</option>
+                            {[...new Set(exams.map((e: { examName: string }) => e.examName))].map((name: string) => (
+                                <option key={name} value={name}>{name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <button
+                        onClick={handleFilter}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-md shadow transition duration-200 flex items-center h-[42px]"
                     >
-                        <option value="">All Classes</option>
-                        {classes.map((c: { _id: string; name: string }) => <option key={c._id} value={c._id}>{c.name}</option>)}
-                    </select>
+                        <Search size={18} className="mr-2" />
+                        Filter
+                    </button>
                 </div>
-                <div className="flex-1 min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Section</label>
-                    <select
-                        value={selectedSection}
-                        onChange={(e) => setSelectedSection(e.target.value)}
-                        className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
-                        disabled={!selectedClass}
-                    >
-                        <option value="">{isLoadingSections ? 'Loading...' : !selectedClass ? 'Select Class First' : 'All Sections'}</option>
-                        {sections.map((s: { _id: string; name: string }) => <option key={s._id} value={s._id}>{s.name}</option>)}
-                    </select>
-                </div>
-                <div className="flex-1 min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Exam</label>
-                    <select
-                        value={selectedExam}
-                        onChange={(e) => setSelectedExam(e.target.value)}
-                        className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
-                    >
-                        <option value="">All Exams</option>
-                        {[...new Set(exams.map((e: { examName: string }) => e.examName))].map((name: string) => (
-                            <option key={name} value={name}>{name}</option>
-                        ))}
-                    </select>
-                </div>
-                <button
-                    onClick={handleFilter}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-md shadow transition duration-200 flex items-center h-[42px]"
-                >
-                    <Search size={18} className="mr-2" />
-                    Filter
-                </button>
-            </div>
+            )}
 
             {/* Result Table */}
             <Table

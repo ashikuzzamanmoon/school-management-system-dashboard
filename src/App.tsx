@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
@@ -36,7 +36,57 @@ import CreateAdmin from './pages/Admin/CreateAdmin';
 import AdminList from './pages/Admin/AdminList';
 import UpdateAdmin from './pages/Admin/UpdateAdmin';
 
-const queryClient = new QueryClient();
+import { userService } from './services/user.service';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+const DashboardDispatcher = () => {
+  const { data: userData, isLoading, isError } = useQuery({ 
+    queryKey: ['me'], 
+    queryFn: userService.getMe,
+    retry: false,
+    staleTime: 5 * 60 * 1000 // Cache for 5 mins
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  // If there's an error or no data, go to login
+  if (isError || !userData) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const role = (userData?.user?.role || userData?.role || '').toLowerCase();
+
+  if (role === 'student') {
+    return (
+      <StudentLayout>
+        <StudentDashboard />
+      </StudentLayout>
+    );
+  }
+
+  return (
+    <MainLayout>
+      <DashboardHome />
+    </MainLayout>
+  );
+};
+
+
+
 
 function App() {
   return (
@@ -46,17 +96,17 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           
-          {/* Default Redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          
+          {/* Universal Dashboard Route */}
+          <Route path="/dashboard" element={<DashboardDispatcher />} />
 
-          {/* Admin & SuperAdmin Routes */}
+          {/* Admin & SuperAdmin Specific Routes */}
           <Route element={<ProtectedRoute allowedRoles={['admin', 'superadmin']} />}>
             <Route element={<MainLayout />}>
-              <Route path="/dashboard" element={<DashboardHome />} />
               <Route path="/create-admin" element={<CreateAdmin />} />
               <Route path="/admin-list" element={<AdminList />} />
               <Route path="/admin/edit/:id" element={<UpdateAdmin />} />
-              <Route path="/profile" element={<Profile />} />
               <Route path="/academic/classes" element={<ClassList />} />
               <Route path="/academic/sections" element={<SectionList />} />
               <Route path="/academic/subjects" element={<SubjectList />} />
@@ -75,24 +125,23 @@ function App() {
               <Route path="/fees" element={<FeeList />} />
               <Route path="/fees/add" element={<AddFee />} />
               <Route path="/leaves" element={<LeaveList />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
           </Route>
 
-          {/* Student Routes */}
+          {/* Student Specific Routes */}
           <Route element={<ProtectedRoute allowedRoles={['student']} />}>
             <Route element={<StudentLayout />}>
-              <Route path="/dashboard" element={<StudentDashboard />} />
-              <Route path="/student/routine" element={<RoutineList />} /> {/* Temporary: Use same component */}
+              <Route path="/student/routine" element={<RoutineList />} />
               <Route path="/student/exams" element={<ExamList />} />
               <Route path="/student/results" element={<ResultList />} />
               <Route path="/student/study-guides" element={<StudyGuideList />} />
               <Route path="/student/fees" element={<FeeList />} />
               <Route path="/student/leaves" element={<LeaveList />} />
-              <Route path="/profile" element={<Profile />} />
+              <Route path="/student/profile" element={<Profile />} />
             </Route>
           </Route>
 
-          {/* Fallback for unauthorized access or wrong path */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>

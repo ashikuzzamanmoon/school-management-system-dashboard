@@ -31,6 +31,10 @@ export const resultService = {
         const response = await api.get<IResponse<IResult[]>>('/results', { params });
         return response.data.data;
     },
+    getMyResults: async () => {
+        const response = await api.get<IResponse<IResult[]>>('/results/my-result');
+        return response.data.data;
+    },
     updateResult: async (id: string, data: Partial<ICreateResultPayload>) => {
         const response = await api.patch<IResponse<IResult>>(`/results/${id}`, data);
         return response.data;

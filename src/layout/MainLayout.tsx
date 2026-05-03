@@ -16,7 +16,7 @@ import {
     Shield
 } from 'lucide-react';
 
-const MainLayout = () => {
+const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     const location = useLocation();
@@ -341,7 +341,7 @@ const MainLayout = () => {
 
                 {/* Content Area */}
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
-                    <Outlet />
+                    {children || <Outlet />}
                 </main>
             </div>
         </div>

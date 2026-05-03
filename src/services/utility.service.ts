@@ -49,6 +49,10 @@ export const feeService = {
         const response = await api.get<IResponse<IFee[]>>('/fees');
         return response.data.data;
     },
+    getMyFees: async () => {
+        const response = await api.get<IResponse<IFee[]>>('/fees/my-fees');
+        return response.data.data;
+    },
     updateFee: async (id: string, data: Partial<ICreateFeePayload>) => {
         const response = await api.patch<IResponse<IFee>>(`/fees/${id}`, data);
         return response.data;

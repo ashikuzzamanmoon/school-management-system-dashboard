@@ -4,6 +4,7 @@ import { Check, X, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { leaveService } from '../../services/leave.service';
+import { userService } from '../../services/user.service';
 import Table from '../../components/common/Table';
 import type { ILeaveApplication } from '../../types/leave.types';
 
@@ -11,9 +12,14 @@ const LeaveList = () => {
     const queryClient = useQueryClient();
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+    const { data: userData } = useQuery({ queryKey: ['me'], queryFn: userService.getMe });
+    const userRole = (userData?.user?.role || userData?.role || '').toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin';
+
     const { data: leaves = [], isLoading } = useQuery({
-        queryKey: ['leaves'],
-        queryFn: () => leaveService.getLeaves(),
+        queryKey: ['leaves', userRole],
+        queryFn: () => isAdmin ? leaveService.getLeaves() : leaveService.getMyLeaves(),
+        enabled: !!userRole
     });
 
     const updateStatusMutation = useMutation({
@@ -60,7 +66,7 @@ const LeaveList = () => {
     const columns = [
         {
             header: 'Applicant',
-            accessor: (item: ILeaveApplication) => (item.student as any)?.name || 'N/A'
+            accessor: (item: ILeaveApplication) => (item.student as { name?: string })?.name || 'N/A'
         },
         {
             header: 'Type',
@@ -99,7 +105,8 @@ const LeaveList = () => {
                 );
             }
         },
-        {
+        // Only show actions for admins
+        ...(isAdmin ? [{
             header: 'Actions',
             accessor: (item: ILeaveApplication) => (
                 <div className="flex space-x-2">
@@ -133,7 +140,7 @@ const LeaveList = () => {
                     </button>
                 </div>
             )
-        }
+        }] : [])
     ];
 
     return (

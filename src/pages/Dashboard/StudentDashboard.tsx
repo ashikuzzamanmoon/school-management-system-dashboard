@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { userService } from '../../services/user.service';
-import { Calendar, BookOpen, FileText, CreditCard, Bell, UserIcon } from 'lucide-react';
+import { Calendar, BookOpen, FileText, CreditCard, Bell, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const StudentDashboard = () => {
@@ -86,7 +86,7 @@ const StudentDashboard = () => {
                         </Link>
                         <Link to="/profile" className="w-full flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
                             <span className="text-sm font-medium text-gray-700">Update Profile</span>
-                            <UserIcon size={16} className="text-gray-400" />
+                            <User size={16} className="text-gray-400" />
                         </Link>
                     </div>
                 </div>

@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
     const token = localStorage.getItem('accessToken');
     
-    const { data: userData, isLoading } = useQuery({
+    const { data: userData, isLoading, isError } = useQuery({
         queryKey: ['me'],
         queryFn: userService.getMe,
         enabled: !!token,
@@ -28,11 +28,20 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
         );
     }
 
+    // Only redirect to login if there's an error fetching user data or it's clearly missing after loading
+    if (isError || !userData) {
+        return <Navigate to="/login" replace />;
+    }
+
     const userRole = (userData?.user?.role || userData?.role || '').toLowerCase();
 
+    if (!userRole) {
+        return <Navigate to="/login" replace />;
+    }
+
     if (!allowedRoles.includes(userRole)) {
-        // If they don't have permission for this route, redirect to their home
-        return <Navigate to="/dashboard" replace />;
+        // If they don't have permission for this specific route, redirect back to home
+        return <Navigate to="/" replace />;
     }
 
     return <Outlet />;

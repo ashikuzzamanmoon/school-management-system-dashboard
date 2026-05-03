@@ -15,8 +15,21 @@ const FeeList = () => {
     const [currentFee, setCurrentFee] = useState<IFee | null>(null);
 
     const queryClient = useQueryClient();
-    const { data: fees = [], isLoading } = useQuery({ queryKey: ['fees'], queryFn: () => feeService.getFees() });
-    const { data: students = [] } = useQuery({ queryKey: ['students'], queryFn: () => userService.getAllStudents() });
+    const { data: userData } = useQuery({ queryKey: ['me'], queryFn: userService.getMe });
+    const userRole = (userData?.user?.role || userData?.role || '').toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin';
+
+    const { data: fees = [], isLoading } = useQuery({ 
+        queryKey: ['fees', userRole], 
+        queryFn: () => isAdmin ? feeService.getFees() : feeService.getMyFees(),
+        enabled: !!userRole
+    });
+
+    const { data: students = [] } = useQuery({ 
+        queryKey: ['students'], 
+        queryFn: () => userService.getAllStudents(),
+        enabled: isAdmin // Only fetch all students if user is Admin
+    });
 
     // Update Mutation
     const updateMutation = useMutation({
@@ -108,7 +121,8 @@ const FeeList = () => {
             header: 'Month/Year',
             accessor: (item: IFee) => `${item.month} ${item.year}`
         },
-        {
+        // Only show actions for admins
+        ...(isAdmin ? [{
             header: 'Actions',
             accessor: (item: IFee) => (
                 <div className="flex gap-2">
@@ -120,20 +134,22 @@ const FeeList = () => {
                     </button>
                 </div>
             )
-        }
+        }] : [])
     ];
 
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-gray-800">Fee Records</h1>
-                <Link
-                    to="/fees/add"
-                    className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200"
-                >
-                    <Plus size={20} className="mr-2" />
-                    New Record
-                </Link>
+                {isAdmin && (
+                    <Link
+                        to="/fees/add"
+                        className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200"
+                    >
+                        <Plus size={20} className="mr-2" />
+                        New Record
+                    </Link>
+                )}
             </div>
 
             <Table

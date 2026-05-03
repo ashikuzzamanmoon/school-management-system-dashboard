@@ -5,6 +5,7 @@ import { Plus, Filter, Calendar, Pencil, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { academicService } from '../../services/academic.service';
 import { routineService } from '../../services/routine.service';
+import { userService } from '../../services/user.service';
 import type { IRoutine, ICreateRoutinePayload } from '../../types/routine.types';
 
 const RoutineList = () => {
@@ -12,6 +13,10 @@ const RoutineList = () => {
     const [selectedClass, setSelectedClass] = useState<string>('');
     const [selectedSection, setSelectedSection] = useState<string>('');
     const [filters, setFilters] = useState<{ class: string; section: string } | null>(null);
+
+    const { data: userData } = useQuery({ queryKey: ['me'], queryFn: userService.getMe });
+    const userRole = (userData?.user?.role || userData?.role || '').toLowerCase();
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin';
 
     // Fetch master data
     const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: () => academicService.getClasses() });
@@ -127,9 +132,11 @@ const RoutineList = () => {
         <div>
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <h1 className="text-2xl font-bold text-gray-800">Class Routine</h1>
-                <Link to="/routine/add" className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200">
-                    <Plus size={20} className="mr-2" /> Add Routine
-                </Link>
+                {isAdmin && (
+                    <Link to="/routine/add" className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200">
+                        <Plus size={20} className="mr-2" /> Add Routine
+                    </Link>
+                )}
             </div>
 
             {/* Filters */}
@@ -202,22 +209,24 @@ const RoutineList = () => {
                                         </div>
 
                                         {/* Action Buttons */}
-                                        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={() => openEditModal(routine)}
-                                                className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-full"
-                                                title="Edit"
-                                            >
-                                                <Pencil size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(routine._id)}
-                                                className="p-1.5 text-red-600 hover:bg-red-100 rounded-full"
-                                                title="Delete"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
+                                        {isAdmin && (
+                                            <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => openEditModal(routine)}
+                                                    className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-full"
+                                                    title="Edit"
+                                                >
+                                                    <Pencil size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(routine._id)}
+                                                    className="p-1.5 text-red-600 hover:bg-red-100 rounded-full"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
