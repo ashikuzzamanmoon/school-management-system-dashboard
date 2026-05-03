@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Plus, Filter, Calendar, Pencil, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { academicService } from '../../services/academic.service';
 import { routineService } from '../../services/routine.service';
-import type { IRoutine } from '../../types/routine.types';
+import type { IRoutine, ICreateRoutinePayload } from '../../types/routine.types';
 
 const RoutineList = () => {
     const queryClient = useQueryClient();
@@ -21,12 +21,30 @@ const RoutineList = () => {
         enabled: !!selectedClass
     });
 
-    // Fetch Routines - Only enabled when filters are applied
+    // Fetch Routines
     const { data: routines = [], isLoading } = useQuery({
         queryKey: ['routines', filters],
-        queryFn: () => routineService.getRoutines(filters!),
-        enabled: !!filters,
+        queryFn: () => routineService.getRoutines(filters || {}),
+        enabled: true,
     });
+
+    // Auto-select first class and section
+    useEffect(() => {
+        if (classes.length > 0 && !selectedClass) {
+            const timeoutId = setTimeout(() => setSelectedClass(classes[0]._id), 0);
+            return () => clearTimeout(timeoutId);
+        }
+    }, [classes, selectedClass]);
+
+    useEffect(() => {
+        if (sections.length > 0 && !selectedSection && selectedClass) {
+            const timeoutId = setTimeout(() => {
+                setSelectedSection(sections[0]._id);
+                setFilters({ class: selectedClass, section: sections[0]._id });
+            }, 0);
+            return () => clearTimeout(timeoutId);
+        }
+    }, [sections, selectedSection, selectedClass]);
 
     const handleFilter = () => {
         if (selectedClass && selectedSection) {
@@ -50,7 +68,7 @@ const RoutineList = () => {
             toast.success('Routine deleted successfully');
             queryClient.invalidateQueries({ queryKey: ['routines'] });
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to delete routine');
         },
     });
@@ -83,14 +101,14 @@ const RoutineList = () => {
     };
 
     const updateMutation = useMutation({
-        mutationFn: (data: { id: string; payload: any }) => routineService.updateRoutine(data.id, data.payload),
+        mutationFn: (data: { id: string; payload: Partial<ICreateRoutinePayload> }) => routineService.updateRoutine(data.id, data.payload),
         onSuccess: () => {
             toast.success('Routine updated successfully');
             setIsEditModalOpen(false);
             setEditingRoutine(null);
             queryClient.invalidateQueries({ queryKey: ['routines'] });
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to update routine');
         },
     });
@@ -100,7 +118,7 @@ const RoutineList = () => {
         if (editingRoutine) {
             updateMutation.mutate({
                 id: editingRoutine._id,
-                payload: editFormData,
+                payload: editFormData as Partial<ICreateRoutinePayload>,
             });
         }
     };
@@ -127,7 +145,7 @@ const RoutineList = () => {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="">Select Class</option>
-                        {classes.map((cls: any) => <option key={cls._id} value={cls._id}>{cls.name}</option>)}
+                        {classes.map((cls: { _id: string; name: string }) => <option key={cls._id} value={cls._id}>{cls.name}</option>)}
                     </select>
                 </div>
                 <div className="w-full md:w-1/3">
@@ -139,7 +157,7 @@ const RoutineList = () => {
                         disabled={!selectedClass}
                     >
                         <option value="">{isLoadingSections ? 'Loading...' : !selectedClass ? 'Select Class First' : 'Select Section'}</option>
-                        {sections.map((sec: any) => <option key={sec._id} value={sec._id}>{sec.name}</option>)}
+                        {sections.map((sec: { _id: string; name: string }) => <option key={sec._id} value={sec._id}>{sec.name}</option>)}
                     </select>
                 </div>
                 <button
