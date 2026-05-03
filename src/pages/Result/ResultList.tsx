@@ -15,7 +15,7 @@ const ResultList = () => {
     const [selectedSection, setSelectedSection] = useState('');
     const [selectedExam, setSelectedExam] = useState('');
     // Trigger
-    const [filterParams, setFilterParams] = useState<{ class?: string; section?: string; examName?: string } | null>(null);
+    const [filterParams, setFilterParams] = useState<{ class?: string; section?: string; examName?: string } | null>({});
 
     // Edit/Delete State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -33,11 +33,11 @@ const ResultList = () => {
     });
     const { data: exams = [] } = useQuery({ queryKey: ['exams'], queryFn: () => examService.getExams() });
 
-    // Fetch Results - Enabled only when filterParams is set
+    // Fetch Results
     const { data: results = [], isLoading, isFetching } = useQuery({
         queryKey: ['results', filterParams],
-        queryFn: () => resultService.getResults(filterParams!),
-        enabled: !!filterParams,
+        queryFn: () => resultService.getResults(filterParams || {}),
+        enabled: true,
     });
 
     // Update Result Mutation
@@ -48,7 +48,7 @@ const ResultList = () => {
             toast.success('Result updated successfully');
             closeModal();
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to update result');
         }
     });
@@ -60,7 +60,7 @@ const ResultList = () => {
             queryClient.invalidateQueries({ queryKey: ['results'] });
             toast.success('Result deleted successfully');
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to delete result');
         }
     });
@@ -116,7 +116,14 @@ const ResultList = () => {
         },
         {
             header: 'Class',
-            accessor: (item: IResult) => (item.student && (item.student as any).class ? (item.student as any).class.name : 'N/A')
+            accessor: (item: IResult) => {
+                const student = item.student;
+                if (student && typeof student === 'object' && 'class' in student) {
+                    const studentClass = student.class as unknown as { name: string };
+                    return studentClass?.name || 'N/A';
+                }
+                return 'N/A';
+            }
         },
         {
             header: 'Section',
@@ -172,7 +179,7 @@ const ResultList = () => {
                         className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
                     >
                         <option value="">All Classes</option>
-                        {classes.map((c: any) => <option key={c._id} value={c._id}>{c.name}</option>)}
+                        {classes.map((c: { _id: string; name: string }) => <option key={c._id} value={c._id}>{c.name}</option>)}
                     </select>
                 </div>
                 <div className="flex-1 min-w-[200px]">
@@ -184,7 +191,7 @@ const ResultList = () => {
                         disabled={!selectedClass}
                     >
                         <option value="">{isLoadingSections ? 'Loading...' : !selectedClass ? 'Select Class First' : 'All Sections'}</option>
-                        {sections.map((s: any) => <option key={s._id} value={s._id}>{s.name}</option>)}
+                        {sections.map((s: { _id: string; name: string }) => <option key={s._id} value={s._id}>{s.name}</option>)}
                     </select>
                 </div>
                 <div className="flex-1 min-w-[200px]">
@@ -195,7 +202,7 @@ const ResultList = () => {
                         className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
                     >
                         <option value="">All Exams</option>
-                        {[...new Set(exams.map((e: any) => e.examName))].map((name: any) => (
+                        {[...new Set(exams.map((e: { examName: string }) => e.examName))].map((name: string) => (
                             <option key={name} value={name}>{name}</option>
                         ))}
                     </select>
@@ -210,17 +217,11 @@ const ResultList = () => {
             </div>
 
             {/* Result Table */}
-            {filterParams ? (
-                <Table
-                    data={results}
-                    columns={columns}
-                    isLoading={isLoading || isFetching}
-                />
-            ) : (
-                <div className="text-center py-10 text-gray-500 bg-white rounded-lg shadow">
-                    Please select filters and click "Filter" to view results.
-                </div>
-            )}
+            <Table
+                data={results}
+                columns={columns}
+                isLoading={isLoading || isFetching}
+            />
 
             {/* Edit Result Modal */}
             <Modal

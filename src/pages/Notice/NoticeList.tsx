@@ -19,6 +19,11 @@ const NoticeList = () => {
         queryFn: () => noticeService.getNotices(),
     });
 
+    // Sort notices by start date (newest first)
+    const sortedNotices = [...notices].sort((a: INotice, b: INotice) => 
+        new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+    );
+
     // Delete Notice Mutation
     const deleteNoticeMutation = useMutation({
         mutationFn: noticeService.deleteNotice,
@@ -26,20 +31,20 @@ const NoticeList = () => {
             queryClient.invalidateQueries({ queryKey: ['notices'] });
             toast.success('Notice deleted successfully');
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to delete notice');
         },
     });
 
     // Update Notice Mutation
     const updateNoticeMutation = useMutation({
-        mutationFn: ({ id, data }: { id: string; data: any }) => noticeService.updateNotice(id, data),
+        mutationFn: ({ id, data }: { id: string; data: Partial<INotice> }) => noticeService.updateNotice(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['notices'] });
             toast.success('Notice updated successfully');
             closeModal();
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to update notice');
         }
     });
@@ -65,7 +70,7 @@ const NoticeList = () => {
         reset();
     };
 
-    const onEditSubmit = (data: any) => {
+    const onEditSubmit = (data: Partial<INotice>) => {
         if (currentNotice?._id) {
             updateNoticeMutation.mutate({ id: currentNotice._id, data });
         }
@@ -87,12 +92,12 @@ const NoticeList = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {notices.length === 0 ? (
+                {sortedNotices.length === 0 ? (
                     <div className="col-span-full text-center py-10 bg-white rounded-lg shadow text-gray-500">
                         No notices found.
                     </div>
                 ) : (
-                    notices.map((notice: INotice) => (
+                    sortedNotices.map((notice: INotice) => (
                         <div key={notice._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 relative group">
                             {/* Action Buttons Overlay */}
                             <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 p-1 rounded-md shadow-sm">

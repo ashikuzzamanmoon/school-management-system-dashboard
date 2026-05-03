@@ -4,7 +4,7 @@ import { Pencil, Trash2, X, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { examService } from '../../services/exam.service';
 import Table from '../../components/common/Table';
-import type { IExam } from '../../types/exam.types';
+import type { IExam, ICreateExamPayload } from '../../types/exam.types';
 
 const ExamList = () => {
     const queryClient = useQueryClient();
@@ -16,6 +16,18 @@ const ExamList = () => {
         queryFn: () => examService.getExams(),
     });
 
+    // Sort exams by class name and then date
+    const sortedExams = [...exams].sort((a: IExam, b: IExam) => {
+        const classA = a.class?.name || '';
+        const classB = b.class?.name || '';
+        
+        if (classA !== classB) {
+            return classA.localeCompare(classB);
+        }
+        
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+    });
+
     const deleteExamMutation = useMutation({
         mutationFn: examService.deleteExam,
         onSuccess: () => {
@@ -24,7 +36,7 @@ const ExamList = () => {
     });
 
     const updateExamMutation = useMutation({
-        mutationFn: ({ id, data }: { id: string; data: any }) => examService.updateExam(id, data),
+        mutationFn: ({ id, data }: { id: string; data: Partial<ICreateExamPayload> }) => examService.updateExam(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['exams'] });
             setIsEditModalOpen(false);
@@ -50,11 +62,11 @@ const ExamList = () => {
         // Collect form data
         const form = e.target as HTMLFormElement;
         const formData = new FormData(form);
-        const data = {
-            examName: formData.get('examName'),
-            date: formData.get('date'),
-            startTime: formData.get('startTime'),
-            endTime: formData.get('endTime'),
+        const data: Partial<ICreateExamPayload> = {
+            examName: formData.get('examName') as string,
+            date: formData.get('date') as string,
+            startTime: formData.get('startTime') as string,
+            endTime: formData.get('endTime') as string,
         };
 
         updateExamMutation.mutate({ id: selectedExam._id, data });
@@ -62,8 +74,8 @@ const ExamList = () => {
 
     const columns = [
         { header: 'Exam Name', accessor: 'examName' as keyof IExam },
-        { header: 'Class', accessor: (item: IExam) => (item.class as any)?.name || (item.class as any)?.className || 'N/A' },
-        { header: 'Subject', accessor: (item: IExam) => (item.subject as any)?.name || (item.subject as any)?.subjectName || 'N/A' },
+        { header: 'Class', accessor: (item: IExam) => item.class?.name || 'N/A' },
+        { header: 'Subject', accessor: (item: IExam) => item.subject?.name || 'N/A' },
         { header: 'Date', accessor: (item: IExam) => new Date(item.date).toLocaleDateString() },
         { header: 'Time', accessor: (item: IExam) => `${item.startTime} - ${item.endTime}` },
         {
@@ -100,7 +112,7 @@ const ExamList = () => {
             </div>
 
             <Table
-                data={exams}
+                data={sortedExams}
                 columns={columns}
                 isLoading={isLoading}
             />

@@ -34,15 +34,20 @@ const StudyGuideList = () => {
         queryFn: () => studyGuideService.getStudyGuides(filterParams),
     });
 
+    // Sort study guides by date (newest first)
+    const sortedGuides = [...guides].sort((a: IStudyGuide, b: IStudyGuide) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
     // Update Mutation
     const updateMutation = useMutation({
-        mutationFn: ({ id, data }: { id: string; data: any }) => studyGuideService.updateStudyGuide(id, data),
+        mutationFn: ({ id, data }: { id: string; data: Partial<IStudyGuide> }) => studyGuideService.updateStudyGuide(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['studyGuides'] });
             toast.success('Study Guide updated successfully');
             setIsEditModalOpen(false);
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to update study guide');
         },
     });
@@ -54,7 +59,7 @@ const StudyGuideList = () => {
             queryClient.invalidateQueries({ queryKey: ['studyGuides'] });
             toast.success('Study Guide deleted successfully');
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to delete study guide');
         },
     });
@@ -80,9 +85,9 @@ const StudyGuideList = () => {
 
     const handleEdit = (item: IStudyGuide) => {
         setCurrentStudyGuide(item);
-        setValue('class', (item.class as any)?._id);
-        setValue('section', (item.section as any)?._id);
-        setValue('subject', (item.subject as any)?._id);
+        setValue('class', (item.class as unknown as { _id: string })?._id);
+        setValue('section', (item.section as unknown as { _id: string })?._id);
+        setValue('subject', (item.subject as unknown as { _id: string })?._id);
         setValue('date', new Date(item.date).toISOString().split('T')[0]);
         setValue('topic', item.topic);
         setIsEditModalOpen(true);
@@ -94,7 +99,7 @@ const StudyGuideList = () => {
         }
     };
 
-    const onEditSubmit = (data: any) => {
+    const onEditSubmit = (data: Partial<IStudyGuide>) => {
         if (currentStudyGuide?._id) {
             updateMutation.mutate({ id: currentStudyGuide._id, data });
         }
@@ -103,7 +108,7 @@ const StudyGuideList = () => {
     const columns = [
         {
             header: 'Subject',
-            accessor: (item: IStudyGuide) => (item.subject as any)?.name || 'N/A'
+            accessor: (item: IStudyGuide) => (item.subject as unknown as { name: string })?.name || 'N/A'
         },
         {
             header: 'Topic / Homework',
@@ -112,11 +117,11 @@ const StudyGuideList = () => {
         },
         {
             header: 'Class',
-            accessor: (item: IStudyGuide) => (item.class as any)?.name || 'N/A'
+            accessor: (item: IStudyGuide) => (item.class as unknown as { name: string })?.name || 'N/A'
         },
         {
             header: 'Section',
-            accessor: (item: IStudyGuide) => (item.section as any)?.name || 'N/A'
+            accessor: (item: IStudyGuide) => (item.section as unknown as { name: string })?.name || 'N/A'
         },
         {
             header: 'Date',
@@ -163,7 +168,7 @@ const StudyGuideList = () => {
                         className="w-full border-gray-300 rounded-md shadow-sm p-2 border"
                     >
                         <option value="">All Classes</option>
-                        {classes.map((c: any) => <option key={c._id} value={c._id}>{c.name}</option>)}
+                        {classes.map((c: { _id: string; name: string }) => <option key={c._id} value={c._id}>{c.name}</option>)}
                     </select>
                 </div>
                 <div className="flex-1 min-w-[200px]">
@@ -175,7 +180,7 @@ const StudyGuideList = () => {
                         disabled={!selectedClass}
                     >
                         <option value="">{isLoadingSections ? 'Loading...' : !selectedClass ? 'Select Class First' : 'All Sections'}</option>
-                        {filterSections.map((s: any) => <option key={s._id} value={s._id}>{s.name}</option>)}
+                        {filterSections.map((s: { _id: string; name: string }) => <option key={s._id} value={s._id}>{s.name}</option>)}
                     </select>
                 </div>
                 <div className="flex-1 min-w-[200px]">
@@ -197,7 +202,7 @@ const StudyGuideList = () => {
             </div>
 
             <Table
-                data={guides}
+                data={sortedGuides}
                 columns={columns}
                 isLoading={isLoading}
             />
@@ -213,7 +218,7 @@ const StudyGuideList = () => {
                         <label className="block text-gray-700 text-sm font-bold mb-2">Class</label>
                         <select {...register('class', { required: 'Class is required' })} className="w-full border border-gray-300 rounded-md p-2">
                             <option value="">Select Class</option>
-                            {classes.map((c: any) => <option key={c._id} value={c._id}>{c.name}</option>)}
+                            {classes.map((c: { _id: string; name: string }) => <option key={c._id} value={c._id}>{c.name}</option>)}
                         </select>
                         {errors.class && <p className="text-red-500 text-xs mt-1">{String(errors.class.message)}</p>}
                     </div>
@@ -222,7 +227,7 @@ const StudyGuideList = () => {
                         <label className="block text-gray-700 text-sm font-bold mb-2">Section</label>
                         <select {...register('section', { required: 'Section is required' })} className="w-full border border-gray-300 rounded-md p-2">
                             <option value="">Select Section</option>
-                            {editSections.map((s: any) => <option key={s._id} value={s._id}>{s.name}</option>)}
+                            {editSections.map((s: { _id: string; name: string }) => <option key={s._id} value={s._id}>{s.name}</option>)}
                         </select>
                         {errors.section && <p className="text-red-500 text-xs mt-1">{String(errors.section.message)}</p>}
                     </div>
@@ -231,7 +236,7 @@ const StudyGuideList = () => {
                         <label className="block text-gray-700 text-sm font-bold mb-2">Subject</label>
                         <select {...register('subject', { required: 'Subject is required' })} className="w-full border border-gray-300 rounded-md p-2">
                             <option value="">Select Subject</option>
-                            {subjects.map((s: any) => <option key={s._id} value={s._id}>{s.name}</option>)}
+                            {subjects.map((s: { _id: string; name: string }) => <option key={s._id} value={s._id}>{s.name}</option>)}
                         </select>
                         {errors.subject && <p className="text-red-500 text-xs mt-1">{String(errors.subject.message)}</p>}
                     </div>

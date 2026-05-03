@@ -20,13 +20,13 @@ const FeeList = () => {
 
     // Update Mutation
     const updateMutation = useMutation({
-        mutationFn: ({ id, data }: { id: string; data: any }) => feeService.updateFee(id, data),
+        mutationFn: ({ id, data }: { id: string; data: Partial<IFee> }) => feeService.updateFee(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['fees'] });
             toast.success('Fee record updated successfully');
             setIsEditModalOpen(false);
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to update fee record');
         },
     });
@@ -38,7 +38,7 @@ const FeeList = () => {
             queryClient.invalidateQueries({ queryKey: ['fees'] });
             toast.success('Fee record deleted successfully');
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to delete fee record');
         },
     });
@@ -48,7 +48,7 @@ const FeeList = () => {
 
     const handleEdit = (item: IFee) => {
         setCurrentFee(item);
-        setValue('student', (item.student as any)?._id);
+        setValue('student', (item.student as unknown as { _id: string })?._id);
         setValue('type', item.type);
         setValue('amount', item.amount);
         setValue('month', item.month);
@@ -64,7 +64,7 @@ const FeeList = () => {
         }
     };
 
-    const onEditSubmit = (data: any) => {
+    const onEditSubmit = (data: Partial<IFee>) => {
         if (currentFee?._id) {
             updateMutation.mutate({ id: currentFee._id, data: { ...data, amount: Number(data.amount) } });
         }
@@ -73,19 +73,19 @@ const FeeList = () => {
     const columns = [
         {
             header: 'Student Name',
-            accessor: (item: IFee) => (item.student as any)?.name || 'N/A'
+            accessor: (item: IFee) => (item.student as unknown as { name: string })?.name || 'N/A'
         },
         {
             header: 'Roll No',
-            accessor: (item: IFee) => (item.student as any)?.roll || 'N/A'
+            accessor: (item: IFee) => (item.student as unknown as { roll: string })?.roll || 'N/A'
         },
         {
             header: 'Class',
-            accessor: (item: IFee) => (item.class as any)?.name || 'N/A'
+            accessor: (item: IFee) => (item.class as unknown as { name: string })?.name || 'N/A'
         },
         {
             header: 'Section',
-            accessor: (item: IFee) => (item.section as any)?.name || 'N/A'
+            accessor: (item: IFee) => (item.section as unknown as { name: string })?.name || 'N/A'
         },
         {
             header: 'Type',
@@ -153,7 +153,7 @@ const FeeList = () => {
                         <label className="block text-gray-700 text-sm font-bold mb-2">Student</label>
                         <select {...register('student', { required: 'Student is required' })} className="w-full border border-gray-300 rounded-md p-2">
                             <option value="">Select Student</option>
-                            {students.map((stu: any) => (
+                            {students.map((stu: { _id: string; name: string; roll: string }) => (
                                 <option key={stu._id} value={stu._id}>{stu.name} ({stu.roll})</option>
                             ))}
                         </select>
@@ -185,7 +185,7 @@ const FeeList = () => {
                         <div>
                             <label className="block text-gray-700 text-sm font-bold mb-2">Year</label>
                             <select {...register('year', { required: 'Year is required' })} className="w-full border border-gray-300 rounded-md p-2">
-                                {[2024, 2025, 2026].map(y => (
+                                {Array.from({ length: 11 }, (_, i) => 2026 + i).map(y => (
                                     <option key={y} value={y.toString()}>{y}</option>
                                 ))}
                             </select>

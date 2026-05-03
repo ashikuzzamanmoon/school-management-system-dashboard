@@ -49,7 +49,7 @@ const AddFee = () => {
             reset({ status: 'Unpaid', transactionId: '' });
             setTimeout(() => setSuccessMessage(null), 3000);
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             setErrorMessage(error.response?.data?.message || 'Failed to add fee record');
             setSuccessMessage(null);
         },
@@ -76,7 +76,7 @@ const AddFee = () => {
                             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><Layers size={18} /></span>
                             <select {...register('class')} className={`w-full pl-10 px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500 bg-white ${errors.class ? 'border-red-500' : 'border-gray-300'}`}>
                                 <option value="">Select Class</option>
-                                {classes.map((cls: any) => (
+                                {classes.map((cls: { _id: string; name: string }) => (
                                     <option key={cls._id} value={cls._id}>{cls.name}</option>
                                 ))}
                             </select>
@@ -89,7 +89,7 @@ const AddFee = () => {
                             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><Users size={18} /></span>
                             <select {...register('section')} className={`w-full pl-10 px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500 bg-white ${errors.section ? 'border-red-500' : 'border-gray-300'}`}>
                                 <option value="">Select Section</option>
-                                {sections.map((sec: any) => (
+                                {sections.map((sec: { _id: string; name: string }) => (
                                     <option key={sec._id} value={sec._id}>{sec.name}</option>
                                 ))}
                             </select>
@@ -105,7 +105,7 @@ const AddFee = () => {
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><User size={18} /></span>
                         <select {...register('student')} className={`w-full pl-10 px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500 bg-white ${errors.student ? 'border-red-500' : 'border-gray-300'}`}>
                             <option value="">Select Student</option>
-                            {students.map((stu: any) => (
+                            {students.map((stu: { _id: string; name: string; roll: string }) => (
                                 <option key={stu._id} value={stu._id}>{stu.name} (Roll: {stu.roll})</option>
                             ))}
                         </select>
@@ -151,7 +151,7 @@ const AddFee = () => {
                             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><Calendar size={18} /></span>
                             <select {...register('year')} className={`w-full pl-10 px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500 bg-white ${errors.year ? 'border-red-500' : 'border-gray-300'}`}>
                                 <option value="">Select Year</option>
-                                {[2024, 2025, 2026].map(y => (
+                                {Array.from({ length: 11 }, (_, i) => 2026 + i).map(y => (
                                     <option key={y} value={y.toString()}>{y}</option>
                                 ))}
                             </select>

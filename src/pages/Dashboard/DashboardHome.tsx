@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Users, School, Bell, CalendarClock, CreditCard } from 'lucide-react';
@@ -6,23 +7,33 @@ import { userService } from '../../services/user.service';
 import { academicService } from '../../services/academic.service';
 import { noticeService } from '../../services/utility.service';
 import { leaveService } from '../../services/leave.service';
+import type { IStudent } from '../../types/student.types';
+import type { IClass } from '../../types/academic.types';
+import type { ILeaveApplication } from '../../types/leave.types';
 
 const DashboardHome = () => {
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setIsMounted(true), 100);
+        return () => clearTimeout(timer);
+    }, []);
+
     // Parallel fetching for stats
     const { data: students = [] } = useQuery({ queryKey: ['students'], queryFn: () => userService.getAllStudents() });
     const { data: classes = [] } = useQuery({ queryKey: ['classes'], queryFn: () => academicService.getClasses() });
     const { data: notices = [] } = useQuery({ queryKey: ['notices'], queryFn: () => noticeService.getNotices() });
     const { data: leaves = [] } = useQuery({ queryKey: ['leaves'], queryFn: () => leaveService.getLeaves() });
 
-    const pendingLeaves = Array.isArray(leaves) ? leaves.filter((l: { status: string }) => l.status === 'Pending').length : 0;
+    const pendingLeaves = Array.isArray(leaves) ? (leaves as ILeaveApplication[]).filter((l) => l.status === 'Pending').length : 0;
 
-    const chartData = classes.map((cls: { _id: string, className?: string, name?: string }) => {
-        const count = students.filter((std: { class?: { _id: string } | string }) => {
+    const chartData = (classes as IClass[]).map((cls) => {
+        const count = (students as IStudent[]).filter((std) => {
             const classId = typeof std.class === 'object' && std.class !== null ? std.class._id : std.class;
             return classId === cls._id;
         }).length;
         return {
-            name: cls.className || cls.name,
+            name: cls.name,
             students: count
         };
     });
@@ -57,16 +68,18 @@ const DashboardHome = () => {
                 <div className="bg-white p-6 rounded-lg shadow-md h-96">
                     <h2 className="text-lg font-semibold text-gray-700 mb-4">Students per Class</h2>
                     <div className="w-full h-80">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" />
-                                <YAxis allowDecimals={false} />
-                                <Tooltip />
-                                <Legend />
-                                <Bar dataKey="students" fill="#3b82f6" name="Students" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
+                        {isMounted && chartData.length > 0 && (
+                            <ResponsiveContainer width="100%" height={320}>
+                                <BarChart data={chartData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" />
+                                    <YAxis allowDecimals={false} />
+                                    <Tooltip />
+                                    <Legend />
+                                    <Bar dataKey="students" fill="#3b82f6" name="Students" radius={[4, 4, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
 
