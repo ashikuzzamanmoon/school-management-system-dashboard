@@ -34,9 +34,7 @@ const MainLayout = () => {
         retry: false,
     });
 
-    useEffect(() => {
-        console.log("Current userData:", userData);
-    }, [userData]);
+
 
     // Decode token role synchronously to avoid setState in useEffect
     const token = localStorage.getItem('accessToken');
