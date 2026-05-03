@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { Users, School, Bell, CalendarClock, CreditCard } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { userService } from '../../services/user.service';
@@ -13,22 +14,24 @@ const DashboardHome = () => {
     const { data: notices = [] } = useQuery({ queryKey: ['notices'], queryFn: () => noticeService.getNotices() });
     const { data: leaves = [] } = useQuery({ queryKey: ['leaves'], queryFn: () => leaveService.getLeaves() });
 
-    const pendingLeaves = Array.isArray(leaves) ? leaves.filter((l: any) => l.status === 'Pending').length : 0;
+    const pendingLeaves = Array.isArray(leaves) ? leaves.filter((l: { status: string }) => l.status === 'Pending').length : 0;
 
-    // Prepare chart data: Students per Class
-    const chartData = classes.map((cls: any) => {
-        const count = students.filter((std: any) => (std.class?._id === cls._id || std.class === cls._id)).length;
+    const chartData = classes.map((cls: { _id: string, className?: string, name?: string }) => {
+        const count = students.filter((std: { class?: { _id: string } | string }) => {
+            const classId = typeof std.class === 'object' && std.class !== null ? std.class._id : std.class;
+            return classId === cls._id;
+        }).length;
         return {
-            name: cls.className,
+            name: cls.className || cls.name,
             students: count
         };
     });
 
     const stats = [
-        { title: 'Total Students', value: students.length, icon: <Users size={24} />, color: 'bg-blue-500' },
-        { title: 'Total Classes', value: classes.length, icon: <School size={24} />, color: 'bg-purple-500' },
-        { title: 'Active Notices', value: notices.length, icon: <Bell size={24} />, color: 'bg-yellow-500' },
-        { title: 'Pending Leaves', value: pendingLeaves, icon: <CalendarClock size={24} />, color: 'bg-red-500' },
+        { title: 'Total Students', value: students.length, icon: <Users size={24} />, color: 'bg-blue-500', link: '/students' },
+        { title: 'Total Classes', value: classes.length, icon: <School size={24} />, color: 'bg-purple-500', link: '/academic/classes' },
+        { title: 'Active Notices', value: notices.length, icon: <Bell size={24} />, color: 'bg-yellow-500', link: '/notices' },
+        { title: 'Pending Leaves', value: pendingLeaves, icon: <CalendarClock size={24} />, color: 'bg-red-500', link: '/leaves' },
     ];
 
     return (
@@ -37,15 +40,15 @@ const DashboardHome = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {stats.map((stat, index) => (
-                    <div key={index} className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between">
+                    <Link to={stat.link} key={index} className="bg-white rounded-lg shadow-md p-6 flex items-center justify-between hover:shadow-lg transition-shadow cursor-pointer group">
                         <div>
-                            <p className="text-gray-500 text-sm font-medium uppercase">{stat.title}</p>
-                            <p className="text-3xl font-bold text-gray-800 mt-1">{stat.value}</p>
+                            <p className="text-gray-500 text-sm font-medium uppercase group-hover:text-blue-600 transition-colors">{stat.title}</p>
+                            <p className="text-3xl font-bold text-gray-800 mt-1 group-hover:text-blue-700 transition-colors">{stat.value}</p>
                         </div>
-                        <div className={`p-4 rounded-full text-white ${stat.color}`}>
+                        <div className={`p-4 rounded-full text-white ${stat.color} group-hover:scale-110 transition-transform duration-300`}>
                             {stat.icon}
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
 

@@ -31,20 +31,20 @@ const StudentList = () => {
             queryClient.invalidateQueries({ queryKey: ['students'] });
             toast.success('Student deleted successfully');
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to delete student');
         },
     });
 
     // Update Student Mutation
     const updateStudentMutation = useMutation({
-        mutationFn: ({ id, data }: { id: string; data: any }) => userService.updateStudent(id, data),
+        mutationFn: ({ id, data }: { id: string; data: { name?: string; guardianPhone?: string } }) => userService.updateStudent(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['students'] });
             toast.success('Student updated successfully');
             closeModal();
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to update student');
         }
     });
@@ -68,21 +68,38 @@ const StudentList = () => {
         reset();
     };
 
-    const onEditSubmit = (data: any) => {
+    const onEditSubmit = (data: { name?: string; guardianPhone?: string }) => {
         if (currentStudent?._id) {
             updateStudentMutation.mutate({ id: currentStudent._id, data });
         }
     };
 
-    // Filter students based on search term
-    const filteredStudents = students.filter((student: IStudent) => {
-        const term = searchTerm.toLowerCase();
-        return (
-            student.name.toLowerCase().includes(term) ||
-            student.user?.id?.toLowerCase().includes(term) ||
-            student.roll.toLowerCase().includes(term)
-        );
-    });
+    // Filter and sort students based on search term, class, section, and roll
+    const filteredStudents = students
+        .filter((student: IStudent) => {
+            const term = searchTerm.toLowerCase();
+            return (
+                student.name.toLowerCase().includes(term) ||
+                student.user?.id?.toLowerCase().includes(term) ||
+                student.roll.toLowerCase().includes(term)
+            );
+        })
+        .sort((a: IStudent, b: IStudent) => {
+            const classA = a.class?.name || '';
+            const classB = b.class?.name || '';
+            if (classA < classB) return -1;
+            if (classA > classB) return 1;
+
+            const sectionA = a.section?.name || '';
+            const sectionB = b.section?.name || '';
+            if (sectionA < sectionB) return -1;
+            if (sectionA > sectionB) return 1;
+
+            // If same class and section, sort by roll numerically
+            const rollA = parseInt(a.roll, 10) || 0;
+            const rollB = parseInt(b.roll, 10) || 0;
+            return rollA - rollB;
+        });
 
     const columns = [
         // {

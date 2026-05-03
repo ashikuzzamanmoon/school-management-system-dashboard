@@ -8,8 +8,6 @@ import {
     Users,
     Calendar,
     FileText,
-    MessageSquare,
-    CreditCard,
     LogOut,
     ChevronDown,
     Menu,
@@ -30,19 +28,37 @@ const MainLayout = () => {
     const [isAdminOpen, setIsAdminOpen] = useState(false);
 
     // Fetch current user
-    const { data: userData } = useQuery({
+    const { data: userData, isLoading } = useQuery({
         queryKey: ['me'],
         queryFn: userService.getMe,
-        retry: false, // Don't retry if context/token is invalid, just redirect (handled by effect)
+        retry: false,
     });
+
+    useEffect(() => {
+        console.log("Current userData:", userData);
+    }, [userData]);
+
+    // Decode token role synchronously to avoid setState in useEffect
+    const token = localStorage.getItem('accessToken');
+    let tokenRole = '';
+    if (token) {
+        try {
+            const payloadBase64 = token.split('.')[1];
+            const decodedPayload = JSON.parse(atob(payloadBase64));
+            if (decodedPayload.role) {
+                tokenRole = decodedPayload.role;
+            }
+        } catch (error) {
+            console.error("Error decoding token:", error);
+        }
+    }
 
     // Check for auth token
     useEffect(() => {
-        const token = localStorage.getItem('accessToken');
         if (!token) {
             navigate('/login');
         }
-    }, [navigate, location]);
+    }, [navigate, location, token]);
 
     const handleLogout = () => {
         localStorage.removeItem('accessToken');
@@ -309,7 +325,7 @@ const MainLayout = () => {
                             <div className="hidden sm:flex flex-col items-end">
 
                                 <span className="text-gray-700 font-medium text-sm leading-none">
-                                    {(userData?.user?.role || userData?.role || 'USER').toUpperCase()}
+                                    {isLoading ? '...' : (userData?.user?.role || userData?.role || (userData?.designation && 'ADMIN') || (userData?.roll && 'STUDENT') || tokenRole || 'USER').toUpperCase()}
                                 </span>
                                 {/* <span className="text-xs text-gray-500">ID: {userData?.id}</span> */}
                             </div>

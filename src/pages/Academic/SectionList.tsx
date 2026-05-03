@@ -6,7 +6,7 @@ import Table from '../../components/common/Table';
 import Modal from '../../components/common/Modal';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { ISection } from '../../types/academic.types';
+import type { ISection, IClass } from '../../types/academic.types';
 
 const SectionList = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,6 +28,18 @@ const SectionList = () => {
         queryFn: () => academicService.getSections(),
     });
 
+    // Sort sections by class name, then section name
+    const sortedSections = [...sections].sort((a, b) => {
+        const classA = typeof a.class === 'object' && a.class !== null && 'name' in a.class ? a.class.name : '';
+        const classB = typeof b.class === 'object' && b.class !== null && 'name' in b.class ? b.class.name : '';
+        if (classA < classB) return -1;
+        if (classA > classB) return 1;
+        
+        const nameA = a.name || '';
+        const nameB = b.name || '';
+        return nameA.localeCompare(nameB);
+    });
+
     // Create Section Mutation
     const createSectionMutation = useMutation({
         mutationFn: academicService.createSection,
@@ -36,7 +48,7 @@ const SectionList = () => {
             toast.success('Section created successfully');
             closeModal();
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to create section');
         }
     });
@@ -49,7 +61,7 @@ const SectionList = () => {
             toast.success('Section updated successfully');
             closeModal();
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to update section');
         }
     });
@@ -61,7 +73,7 @@ const SectionList = () => {
             queryClient.invalidateQueries({ queryKey: ['sections'] });
             toast.success('Section deleted successfully');
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to delete section');
         }
     });
@@ -85,7 +97,7 @@ const SectionList = () => {
         setIsEditMode(true);
         setCurrentSection(item);
         setValue('name', item.name);
-        setValue('class', (item.class as any)?._id || item.class);
+        setValue('class', typeof item.class === 'object' && item.class !== null && '_id' in item.class ? item.class._id : item.class as string);
         setIsModalOpen(true);
     };
 
@@ -106,7 +118,7 @@ const SectionList = () => {
         { header: 'Section Name', accessor: 'name' as keyof ISection },
         {
             header: 'Class',
-            accessor: (item: ISection) => (item.class as any)?.name || 'N/A'
+            accessor: (item: ISection) => (typeof item.class === 'object' && item.class !== null && 'name' in item.class ? item.class.name : 'N/A')
         },
         {
             header: 'Created At',
@@ -141,7 +153,7 @@ const SectionList = () => {
             </div>
 
             <Table
-                data={sections}
+                data={sortedSections}
                 columns={columns}
                 isLoading={isLoading}
             />
@@ -159,7 +171,7 @@ const SectionList = () => {
                             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500 bg-white ${errors.class ? 'border-red-500' : 'border-gray-300'}`}
                         >
                             <option value="">Select Class</option>
-                            {classes.map((cls: any) => (
+                            {classes.map((cls: IClass) => (
                                 <option key={cls._id} value={cls._id}>{cls.name}</option>
                             ))}
                         </select>
