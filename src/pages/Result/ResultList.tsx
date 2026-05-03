@@ -122,6 +122,11 @@ const ResultList = () => {
         {
             header: 'Class',
             accessor: (item: IResult) => {
+                // Check direct population first
+                if (item.class && typeof item.class === 'object') {
+                    return (item.class as unknown as { name: string }).name || 'N/A';
+                }
+                // Fallback to nested student population
                 const student = item.student;
                 if (student && typeof student === 'object' && 'class' in student) {
                     const studentClass = student.class as unknown as { name: string };
@@ -132,7 +137,19 @@ const ResultList = () => {
         },
         {
             header: 'Section',
-            accessor: (item: IResult) => (item.section && typeof item.section === 'object' ? item.section.name : 'N/A')
+            accessor: (item: IResult) => {
+                // Check direct population first
+                if (item.section && typeof item.section === 'object') {
+                    return (item.section as unknown as { name: string }).name || 'N/A';
+                }
+                // Fallback to nested student population
+                const student = item.student;
+                if (student && typeof student === 'object' && 'section' in student) {
+                    const studentSection = student.section as unknown as { name: string };
+                    return studentSection?.name || 'N/A';
+                }
+                return 'N/A';
+            }
         },
         {
             header: 'Subject',

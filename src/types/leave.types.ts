@@ -1,6 +1,7 @@
+import type { IStudent } from './student.types';
 export interface ILeaveApplication {
     _id: string;
-    student: any; // Populated
+    student: IStudent | string; // Populated or ID
     subject: string;
     description: string;
     startDate: string;
@@ -14,7 +15,7 @@ export interface IUpdateLeaveStatusPayload {
 }
 
 export interface ICreateLeavePayload {
-    student: string; // Student ID
+    student?: string; // Student ID
     subject: string;
     description: string;
     startDate: string;
