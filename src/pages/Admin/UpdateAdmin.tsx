@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 const UpdateAdmin = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [isLoadingData, setIsLoadingData] = useState(true);
+
 
     const {
         register,
@@ -20,33 +20,30 @@ const UpdateAdmin = () => {
         formState: { errors },
     } = useForm<CreateAdminResult>({
         resolver: zodResolver(createAdminSchema),
+        values: adminData ? {
+            admin: {
+                name: adminData.name || '',
+                email: adminData.email || '',
+                contactNo: adminData.contactNo || '',
+                designation: adminData.designation || '',
+                gender: adminData.gender || 'male',
+                dateOfBirth: adminData.dateOfBirth || '',
+                bloodGroup: adminData.bloodGroup || 'A+',
+                presentAddress: adminData.presentAddress || '',
+                permanentAddress: adminData.permanentAddress || '',
+                profileImg: adminData.profileImg || '',
+            }
+        } : undefined,
     });
 
-    const { data: adminData, isError } = useQuery({
+    const { data: adminData, isError, isLoading } = useQuery({
         queryKey: ['admin', id],
         queryFn: () => userService.getSingleAdmin(id!),
         enabled: !!id,
     });
 
     useEffect(() => {
-        if (adminData) {
-            setValue('admin.name', adminData.name);
-            setValue('admin.email', adminData.email);
-            setValue('admin.contactNo', adminData.contactNo);
-            setValue('admin.designation', adminData.designation);
-            setValue('admin.gender', adminData.gender);
-            setValue('admin.dateOfBirth', adminData.dateOfBirth);
-            setValue('admin.bloodGroup', adminData.bloodGroup);
-            setValue('admin.presentAddress', adminData.presentAddress);
-            setValue('admin.permanentAddress', adminData.permanentAddress);
-            setValue('admin.profileImg', adminData.profileImg || '');
 
-            setIsLoadingData(false);
-        } else if (isError) {
-            toast.error('Failed to load admin data');
-            setIsLoadingData(false);
-        }
-    }, [adminData, isError, setValue]);
 
     const updateAdminMutation = useMutation({
         mutationFn: (data: CreateAdminResult) => userService.updateAdmin(id!, data.admin),
@@ -63,8 +60,13 @@ const UpdateAdmin = () => {
         updateAdminMutation.mutate(data);
     };
 
-    if (isLoadingData && !adminData) {
+    if (isLoading) {
         return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin text-blue-500" size={48} /></div>;
+    }
+
+    if (isError) {
+        toast.error('Failed to load admin data');
+        return <div className="text-center py-10 text-red-500">Error loading admin data</div>;
     }
 
     return (

@@ -10,18 +10,29 @@ export interface IUser {
     designation?: string;
     gender?: 'male' | 'female' | 'other';
     dateOfBirth?: string;
-    bloodGroup?: string;
+    bloodGroup?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
     presentAddress?: string;
     permanentAddress?: string;
     profileImg?: string;
     user?: Partial<IUser>;
     student?: {
+        _id?: string;
+        id?: string;
         name?: string;
-        [key: string]: any;
+        email?: string;
+        contactNo?: string;
+        presentAddress?: string;
+        permanentAddress?: string;
     };
     admin?: {
+        _id?: string;
+        id?: string;
         name?: string;
-        [key: string]: any;
+        email?: string;
+        contactNo?: string;
+        designation?: string;
+        presentAddress?: string;
+        permanentAddress?: string;
     };
 }
 
