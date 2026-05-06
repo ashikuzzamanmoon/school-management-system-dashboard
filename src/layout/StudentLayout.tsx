@@ -118,7 +118,7 @@ const StudentLayout = ({ children }: { children?: React.ReactNode }) => {
                         <div className="flex items-center space-x-2">
                             <div className="text-right hidden sm:block">
                                 <p className="text-sm font-semibold text-gray-800">{(userData?.student?.name || userData?.name || 'Student')}</p>
-                                <p className="text-xs text-gray-500 capitalize">{userData?.role || 'Student'}</p>
+                                <p className="text-xs text-gray-500 capitalize">{userData?.user?.role || userData?.role || 'Student'}</p>
                             </div>
                             <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white border-2 border-indigo-100">
                                 <UserIcon size={24} />

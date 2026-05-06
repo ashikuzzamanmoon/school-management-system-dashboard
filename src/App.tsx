@@ -68,7 +68,7 @@ const DashboardDispatcher = () => {
     return <Navigate to="/login" replace />;
   }
 
-  const role = (userData?.role || '').toLowerCase();
+  const role = (userData?.user?.role || userData?.role || '').toLowerCase();
 
   if (role === 'student') {
     return (
