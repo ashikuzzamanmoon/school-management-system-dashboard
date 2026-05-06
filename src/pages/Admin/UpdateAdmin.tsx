@@ -12,6 +12,12 @@ const UpdateAdmin = () => {
     const navigate = useNavigate();
 
 
+    const { data: adminData, isError, isLoading } = useQuery({
+        queryKey: ['admin', id],
+        queryFn: () => userService.getSingleAdmin(id!),
+        enabled: !!id,
+    });
+
     const {
         register,
         handleSubmit,
@@ -33,12 +39,6 @@ const UpdateAdmin = () => {
                 profileImg: adminData.profileImg || '',
             }
         } : undefined,
-    });
-
-    const { data: adminData, isError, isLoading } = useQuery({
-        queryKey: ['admin', id],
-        queryFn: () => userService.getSingleAdmin(id!),
-        enabled: !!id,
     });
 
     const updateAdminMutation = useMutation({
