@@ -21,7 +21,6 @@ const UpdateAdmin = () => {
     const {
         register,
         handleSubmit,
-        setValue,
         formState: { errors },
     } = useForm<CreateAdminResult>({
         resolver: zodResolver(createAdminSchema),
