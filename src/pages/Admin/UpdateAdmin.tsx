@@ -16,7 +16,6 @@ const UpdateAdmin = () => {
     const {
         register,
         handleSubmit,
-        reset,
         setValue,
         formState: { errors },
     } = useForm<CreateAdminResult>({
