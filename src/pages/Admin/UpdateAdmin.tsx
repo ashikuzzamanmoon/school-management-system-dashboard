@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -41,9 +40,6 @@ const UpdateAdmin = () => {
         queryFn: () => userService.getSingleAdmin(id!),
         enabled: !!id,
     });
-
-    useEffect(() => {
-
 
     const updateAdminMutation = useMutation({
         mutationFn: (data: CreateAdminResult) => userService.updateAdmin(id!, data.admin),
