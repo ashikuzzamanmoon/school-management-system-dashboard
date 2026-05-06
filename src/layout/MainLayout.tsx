@@ -323,7 +323,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
                             <div className="hidden sm:flex flex-col items-end">
 
                                 <span className="text-gray-700 font-medium text-sm leading-none">
-                                    {isLoading ? '...' : (userData?.user?.role || userData?.role || (userData?.designation && 'ADMIN') || (userData?.roll && 'STUDENT') || tokenRole || 'USER').toUpperCase()}
+                                    {isLoading ? '...' : (userData?.role || tokenRole || 'USER').toUpperCase()}
                                 </span>
                                 {/* <span className="text-xs text-gray-500">ID: {userData?.id}</span> */}
                             </div>
