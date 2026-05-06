@@ -50,7 +50,7 @@ const UpdateAdmin = () => {
     }, [adminData, isError, setValue]);
 
     const updateAdminMutation = useMutation({
-        mutationFn: (data: CreateAdminResult) => userService.updateAdmin(id!, data),
+        mutationFn: (data: CreateAdminResult) => userService.updateAdmin(id!, data.admin),
         onSuccess: () => {
             toast.success('Admin updated successfully');
             navigate('/admin-list');
