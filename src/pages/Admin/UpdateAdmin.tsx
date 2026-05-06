@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -46,8 +47,12 @@ const UpdateAdmin = () => {
             toast.success('Admin updated successfully');
             navigate('/admin-list');
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Failed to update admin');
+        onError: (error: unknown) => {
+            if (axios.isAxiosError(error)) {
+                toast.error(error.response?.data?.message || 'Failed to update admin');
+            } else {
+                toast.error('An unexpected error occurred');
+            }
         },
     });
 
