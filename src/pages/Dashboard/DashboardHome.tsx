@@ -27,16 +27,18 @@ const DashboardHome = () => {
 
     const pendingLeaves = Array.isArray(leaves) ? (leaves as ILeaveApplication[]).filter((l) => l.status === 'Pending').length : 0;
 
-    const chartData = (classes as IClass[]).map((cls) => {
-        const count = (students as IStudent[]).filter((std) => {
-            const classId = typeof std.class === 'object' && std.class !== null ? std.class._id : std.class;
-            return classId === cls._id;
-        }).length;
-        return {
-            name: cls.name,
-            students: count
-        };
-    });
+    const chartData = (classes as IClass[])
+        .map((cls) => {
+            const count = (students as IStudent[]).filter((std) => {
+                const classId = typeof std.class === 'object' && std.class !== null ? std.class._id : std.class;
+                return classId === cls._id;
+            }).length;
+            return {
+                name: cls.name,
+                students: count
+            };
+        })
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
 
     const stats = [
         { title: 'Total Students', value: students.length, icon: <Users size={24} />, color: 'bg-blue-500', link: '/students' },

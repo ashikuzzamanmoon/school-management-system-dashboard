@@ -28,16 +28,20 @@ const SectionList = () => {
         queryFn: () => academicService.getSections(),
     });
 
+    // Sort classes for the dropdown
+    const sortedClasses = [...classes].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+
     // Sort sections by class name, then section name
     const sortedSections = [...sections].sort((a, b) => {
         const classA = typeof a.class === 'object' && a.class !== null && 'name' in a.class ? a.class.name : '';
         const classB = typeof b.class === 'object' && b.class !== null && 'name' in b.class ? b.class.name : '';
-        if (classA < classB) return -1;
-        if (classA > classB) return 1;
+        
+        const classComparison = classA.localeCompare(classB, undefined, { numeric: true, sensitivity: 'base' });
+        if (classComparison !== 0) return classComparison;
         
         const nameA = a.name || '';
         const nameB = b.name || '';
-        return nameA.localeCompare(nameB);
+        return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
     });
 
     // Create Section Mutation
@@ -171,7 +175,7 @@ const SectionList = () => {
                             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500 bg-white ${errors.class ? 'border-red-500' : 'border-gray-300'}`}
                         >
                             <option value="">Select Class</option>
-                            {classes.map((cls: IClass) => (
+                            {sortedClasses.map((cls: IClass) => (
                                 <option key={cls._id} value={cls._id}>{cls.name}</option>
                             ))}
                         </select>

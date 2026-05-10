@@ -17,10 +17,12 @@ const ClassList = () => {
     const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<{ name: string }>();
 
     // Fetch Classes
-    const { data: classes = [], isLoading } = useQuery({
+    const { data: classesData = [], isLoading } = useQuery({
         queryKey: ['classes'],
         queryFn: () => academicService.getClasses(),
     });
+
+    const classes = [...(classesData as IClass[])].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
 
     // Create Class Mutation
     const createClassMutation = useMutation({
@@ -30,7 +32,7 @@ const ClassList = () => {
             toast.success('Class created successfully');
             closeModal();
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to create class');
         }
     });
@@ -43,7 +45,7 @@ const ClassList = () => {
             toast.success('Class updated successfully');
             closeModal();
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to update class');
         }
     });
@@ -55,7 +57,7 @@ const ClassList = () => {
             queryClient.invalidateQueries({ queryKey: ['classes'] });
             toast.success('Class deleted successfully');
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to delete class');
         }
     });

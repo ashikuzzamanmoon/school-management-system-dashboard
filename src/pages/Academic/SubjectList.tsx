@@ -17,10 +17,12 @@ const SubjectList = () => {
     const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<{ name: string; code: string }>();
 
     // Fetch Subjects
-    const { data: subjects = [], isLoading } = useQuery({
+    const { data: subjectsData = [], isLoading } = useQuery({
         queryKey: ['subjects'],
         queryFn: () => academicService.getSubjects(),
     });
+
+    const subjects = [...(subjectsData as ISubject[])].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
 
     // Create Subject Mutation
     const createSubjectMutation = useMutation({
@@ -30,7 +32,7 @@ const SubjectList = () => {
             toast.success('Subject created successfully');
             closeModal();
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to create subject');
         }
     });
@@ -43,7 +45,7 @@ const SubjectList = () => {
             toast.success('Subject updated successfully');
             closeModal();
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to update subject');
         }
     });
@@ -55,7 +57,7 @@ const SubjectList = () => {
             queryClient.invalidateQueries({ queryKey: ['subjects'] });
             toast.success('Subject deleted successfully');
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to delete subject');
         }
     });
